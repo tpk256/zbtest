@@ -1,7 +1,7 @@
 {"name_app": "Slides.exe",
   "camera_ProdVendorId": "",
-  "ip_tv": "192.168.50.214",
-  "client_key": "00572a5be4a904ff6d52029880f45875",
-  "mac_address_tv": "b0-37-95-dd-0f-6f",
+  "ip_tv": "",
+  "client_key": "",
+  "mac_address_tv": "",
   "broadcast": "192.168.50.255",
   "server_zabbix": ["192.168.50.15", 10051]}
