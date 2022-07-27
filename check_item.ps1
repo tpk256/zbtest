@@ -6,7 +6,7 @@ foreach($item in $args)
     else {$obj = $item;}
     
 }
-Write-Host $obj;
+
 
 foreach($item in Get-PnpDevice)
 {
