@@ -6,14 +6,26 @@ import argparse
 import websockets
 import json
 import logging
+import time
 import asyncio
 import subprocess
 import sys
 
 
+def start_and_auth_tv():
+    """
+        Return object RemoteTv that you can use for remote access.
+    """
+    ob = RemoteTv()
+    ob.turn_on()
+    time.sleep(20)
+    ob.login()
+    return ob
+
+
 class Exc(Exception):
     """
-        Затычка, а то в модуле вызван объект Exception(), а pip это не нравится :) таки обошёл.
+        Затычка, а то в модуле вызван объект Exception(), а pip это не нравится, таки обошёл.
     """
     ...
 
@@ -52,6 +64,7 @@ class SetUp:
 
         ip = ip.strip()
         self.config['ip_tv'] = ip
+        self.save_data()
 
     def get_mac_tv(self):
         """
@@ -68,7 +81,8 @@ class SetUp:
                 print("Unfortunately, mac address didn't has get, so you need write manually.")
                 mac = input("Write please mac:\t")
         self.config['mac_address_tv'] = mac.replace(":", "-").upper()
-
+        self.save_data()
+        
     def get_client_key(self):
         """
             Get client key (TV).
@@ -82,8 +96,13 @@ class SetUp:
                     print("To accept linking on tv.")
                 elif status == WebOSClient.REGISTERED:
                     print("Successful registration.")
+                    self.save_data()
         except Exc:
             print("Access to tv was been denied, so you need write client_key manually or restart setUp.")
+            
+    def save_data(self):
+        with open("config.json", "w") as f:
+            json.dump(self.config, f)
 
 
 class Checker(SetUp):  # Inherit because same constructor
@@ -96,7 +115,8 @@ class Checker(SetUp):  # Inherit because same constructor
     TRAPPER_NAMES = ["PINGTV", "STATECAMERA", "STATETV", "STATEAPP"]
     CHECK_APP = r'powershell .\isrun_app.ps1 {}'
     CHECK_ITEM = r"powershell .\check_item.ps1 {}"
-    REQUEST_SEND = r'zabbix_sender -z {zabbix} -p {port} -s "Tele" -k {key} -o {value}'
+
+    REQUEST_SEND = r'zabbix_sender -z {zabbix} -p {port} -s "{host}" -k {key} -o {value}'
 
     def __init__(self):
         SetUp.__init__(self)
@@ -166,11 +186,15 @@ class Checker(SetUp):  # Inherit because same constructor
         """
             Send to zabbix server metrics.
         """
+        self.info.info(f"Start send collected data to [{self.server}:{self.port}] ")
         for key, value in data.items():
             subprocess.run(Checker.REQUEST_SEND.format(zabbix=self.server,
                                                        port=self.port,
+                                                       host=self.config['host'],
                                                        key=key,
-                                                       value=value), **Checker.A_D)
+                                                       value=int(value)), **Checker.A_D)
+
+        self.info.info(f"Finish send collected data to [{self.server}:{self.port}] ")
 
     async def main(self):
         """
@@ -178,12 +202,16 @@ class Checker(SetUp):  # Inherit because same constructor
         """
         self.info.info(msg="Start script!")
         while True:
+            self.info.info("Start collect data")
             answer = {name: False for name in Checker.CHECK_APP}
             answer['PINGTV'] = await self.ping_tv()
             answer['STATECAMERA'] = self.CameraIsConnected
             answer['STATETV'] = self.TvIsConnected
             answer['STATEAPP'] = self.AppIsOn
+            self.info.info(f"Data: {answer}")
+            self.info.info("Finish collect data")
             await self.send_metrics(answer)
+            await asyncio.sleep(90)
 
 
 class RemoteTv(SetUp):
@@ -215,11 +243,12 @@ class RemoteTv(SetUp):
         send_magic_packet(self.config['mac_address_tv'],  # First param - MAC TV; Second param - IP_TV/Broadcast
                           ip_address=self.config['broadcast'])
 
-
+# TODO Create subcommand, example "Checker -host name_host"
 choices = ["SetUp", "Checker", "RemoteTv"]
 parser = argparse.ArgumentParser(description="3 mode: SetUp Checker RemoteTv")
 parser.add_argument("mode", choices=choices)
 # parser.add_argument("--option")  # option for future
+
 
 
 if __name__ == "__main__":
@@ -230,15 +259,11 @@ if __name__ == "__main__":
         ob.get_mac_tv()
         ob.get_client_key()
     elif namespace.mode == "Checker":
-        remoter = RemoteTv()
-        remoter.login()
-        remoter.turn_on()
-
+        start_and_auth_tv()
         checker = Checker()
         asyncio.run(checker.main())
     elif namespace.mode == "RemoteTv":
-        ob = RemoteTv()
-        ob.turn_on()
-        ob.login()
+        ob = start_and_auth_tv()
+        ob.turn_off()
         #  TODO add something
 
