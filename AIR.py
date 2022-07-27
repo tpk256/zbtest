@@ -12,15 +12,7 @@ import subprocess
 import sys
 
 
-def start_and_auth_tv():
-    """
-        Return object RemoteTv that you can use for remote access.
-    """
-    ob = RemoteTv()
-    ob.turn_on()
-    time.sleep(20)
-    ob.login()
-    return ob
+
 
 
 class Exc(Exception):
@@ -242,6 +234,17 @@ class RemoteTv(SetUp):
 
         send_magic_packet(self.config['mac_address_tv'],  # First param - MAC TV; Second param - IP_TV/Broadcast
                           ip_address=self.config['broadcast'])
+
+        
+def start_and_auth_tv() -> RemoteTv:
+    """
+        Return object RemoteTv that you can use for remote access.
+    """
+    ob = RemoteTv()
+    ob.turn_on()
+    time.sleep(20)
+    ob.login()
+    return ob
 
 # TODO Create subcommand, example "Checker -host name_host"
 choices = ["SetUp", "Checker", "RemoteTv"]
