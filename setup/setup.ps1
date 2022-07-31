@@ -1,12 +1,18 @@
 ﻿#Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
 [string] $path_setup = (Get-Location).Path + "\module.psm1";
-Import-Module -Name $path_setup  -Verbose;
+#Import-Module -Name $path_setup  -Verbose;
 
 if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверка на текущую директорию
 {
 
+    $flag = $false;
+    ls $env:ProgramFiles | Where-Object{ if ($_.basename.contains("Python")){$flag = $true;}};
+    
+    Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser -Force;
+    if (-not $flag){
 
-        {
+
+        
             [string] $path_change_acces = "C:\Users";
             $old = get-acl -Path $path_change_acces;
 
@@ -26,9 +32,11 @@ if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверк
 
             $old.AddAccessRule($rule);
 
-            Set-Acl -Path $path_change_acces -AclObject $old
-            S
-        }  # Добавляем права доступа на C:\USERS
+            Set-Acl -Path $path_change_acces -AclObject $old;
+            write-host "ready Privilege";
+            
+          # Добавляем права доступа на C:\USERS
+        pause;
 
 
 
@@ -44,22 +52,21 @@ if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверк
 
 
     #  Install python
-    #[string] $python = "64.exe";
-    ##Write-Host "Start install Python";
-    #Start-Process  $python -Wait -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1 AssociateFiles=1";
-    # Write-Host "Finish install Python";
+    [string] $python = "64.exe";
+    Write-Host "Start install Python";
+    Start-Process  $python -Wait -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1 AssociateFiles=1";
+    Write-Host "Finish install Python";
 
 
-    #  Create a new virtual disk or use exist
-    if (-not ( Test-Path -Path 'ZA:\'))
-        {Create_PSdrive("ZA");}
-    Set-Location -Path ZA:\;
+    #  Create a new virtual disk or use exist---
+    Set-Location -Path C:\Users;
 
 
     #  Create a main folder
+   
     $dir = "Airlabs"
     if (-not (Test-Path -Path $dir))
-        {mkdir -Path . -Name $dir;}
+        {New-Item -Path . -Name $dir -ItemType Directory;}
 
     Set-Location -Path $dir;
 
@@ -114,15 +121,18 @@ if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверк
     $json = $json | ConvertTo-Json;
     Set-Content -Value $json -Path "config.json";
 
+    write-host "Restart script for continue setup";
+    }
 
 #########
 
       #new-item -ItemType Directory -Path . -Name "script";
       #$python_path = $env:Path.split(";") | Where-Object{$_.Contains("Python")} | ForEach-Object{if ($_.split("\")[-2].contains("Python")) {$_}}
       #$python_path += "python.exe";
-     
+     else{
 
 
+     cd C:\Users\Airlabs;
       Write-Host "Start install venv";
       start-process "python.exe" -ArgumentList "-m venv script" -Wait;
       Write-Host "End install venv";
@@ -144,7 +154,7 @@ if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверк
     Start-Process -FilePath "python.exe" "AIR.py Checker" -Wait;
     deactivate;
 
-
+   
 
     <#
     $action_on_start = New-ScheduledTaskAction -Execute "on_start.ps1";
@@ -158,7 +168,7 @@ if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверк
     #>
  
  
-
+     }
 
 }
 
