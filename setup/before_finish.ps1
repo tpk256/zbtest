@@ -1,9 +1,8 @@
-﻿New-PSDrive -Name ZA -PSProvider FileSystem -Root "C:\Users\Airlabs";
-Set-Location -Path ZA:\;
-cd script;
+﻿cd C:\Users\Airlabs\script;
 .\Scripts\Activate.ps1;
 
-Start-Process python .\remote_tv.py -Wait;
-
+cd ..;
+Start-Process python "AIR.py OffTv" -Wait;
 deactivate;
-Start-Process powershell -ArgumentList "shutdown -s -t 60"
+pause;
+Start-Process powershell -ArgumentList "shutdown -s -t 60";

@@ -1,7 +1,6 @@
-﻿New-PSDrive -Name ZA -PSProvider FileSystem -Root "C:\Users\Airlabs";
-Set-Location -Path ZA:\;
-cd script;
+﻿pause;
+cd C:\Users\Airlabs\script
+
 .\Scripts\Activate.ps1;
-Start-Process python .\tv_on.py -Wait;
-Start-Process python .\global_check.py;
-deactivate;
+cd ..;
+Start-Process python "AIR.py Checker" -Wait;

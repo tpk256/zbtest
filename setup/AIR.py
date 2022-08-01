@@ -247,8 +247,8 @@ def start_and_auth_tv() -> RemoteTv:
     return ob
 
 # TODO Create subcommand, example "Checker -host name_host"
-choices = ["SetUp", "Checker", "RemoteTv"]
-parser = argparse.ArgumentParser(description="3 mode: SetUp Checker RemoteTv")
+choices = ["SetUp", "Checker", "RemoteTv", "OffTv"]
+parser = argparse.ArgumentParser(description="3 mode: SetUp Checker RemoteTv OffTv")
 parser.add_argument("mode", choices=choices)
 # parser.add_argument("--option")  # option for future
 
@@ -257,15 +257,23 @@ parser.add_argument("mode", choices=choices)
 if __name__ == "__main__":
     namespace = parser.parse_args()
     if namespace.mode == "SetUp":
+        print("SetUp")
         ob = SetUp()
         ob.get_ip_tv()
         ob.get_mac_tv()
         ob.get_client_key()
     elif namespace.mode == "Checker":
+        print("Checker")
         start_and_auth_tv()
         checker = Checker()
         asyncio.run(checker.main())
+    elif namespace.mode == "OffTv":  # Check it.
+        print("OffTv")
+        input()
+        ob = start_and_auth_tv()
+        ob.turn_off()
     elif namespace.mode == "RemoteTv":
+        print("RemoteControl")
         ob = start_and_auth_tv()
         ob.turn_off()
         #  TODO add something

@@ -155,17 +155,17 @@ if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверк
     deactivate;
 
    
-
-    <#
-    $action_on_start = New-ScheduledTaskAction -Execute "on_start.ps1";
-    $time = New-ScheduledTaskTrigger -AtStartup;
+   
+    
+    $action_on_start = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "C:\Users\Airlabs\on_start.ps1";
+    $time = New-ScheduledTaskTrigger -AtLogOn;
     Register-ScheduledTask -TaskName "ON_START" -Trigger $time -Action $action_on_start;
 
 
-    $action_on_finish = New-ScheduledTaskAction -Execute "on_finish.ps1";
-    $time = New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -at 10pm -DaysOfWeek Monday, Tuesday, Wednesday, Thursday, Friday;
+    $action_on_finish = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "C:\Users\Airlabs\before_finish.ps1";
+    $time = New-ScheduledTaskTrigger -Daily -at 12:50pm;
     Register-ScheduledTask -TaskName "BEFORE_FINISH" -Trigger $time -Action $action_on_finish;
-    #>
+
  
  
      }
