@@ -163,7 +163,7 @@ if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверк
 
 
     $action_on_finish = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "C:\Users\Airlabs\before_finish.ps1";
-    $time = New-ScheduledTaskTrigger -Daily -at 12:50pm;
+    $time = New-ScheduledTaskTrigger -Daily -at 11pm;
     Register-ScheduledTask -TaskName "BEFORE_FINISH" -Trigger $time -Action $action_on_finish;
 
  
