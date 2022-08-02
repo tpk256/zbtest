@@ -53,6 +53,8 @@ if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверк
 
     #  Install python
     [string] $python = "64.exe";
+    if ( -not [System.Environment]::Is64BitOperatingSystem)
+    {$python="32.exe";}
     Write-Host "Start install Python";
     Start-Process  $python -Wait -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1 AssociateFiles=1";
     Write-Host "Finish install Python";
