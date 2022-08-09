@@ -12,9 +12,6 @@ import subprocess
 import sys
 
 
-
-
-
 class Exc(Exception):
     """
         Затычка, а то в модуле вызван объект Exception(), а pip это не нравится, таки обошёл.
@@ -107,6 +104,7 @@ class Checker(SetUp):  # Inherit because same constructor
     TRAPPER_NAMES = ["PINGTV", "STATECAMERA", "STATETV", "STATEAPP"]
     CHECK_APP = r'powershell .\isrun_app.ps1 {}'
     CHECK_ITEM = r"powershell .\check_item.ps1 {}"
+    CHECK_CAMERA = r"powershell .\check_camera.ps1"
 
     REQUEST_SEND = r'zabbix_sender -z {zabbix} -p {port} -s "{host}" -k {key} -o {value}'
 
@@ -137,7 +135,7 @@ class Checker(SetUp):  # Inherit because same constructor
         """
         #  TODO change way get status camera
 
-        camera = subprocess.run(Checker.CHECK_ITEM.format(self.config['camera']), **Checker.A_D)
+        camera = subprocess.run(Checker.CHECK_CAMERA, **Checker.A_D)
         return camera.stdout.strip().decode() == str(True)
 
     @property
