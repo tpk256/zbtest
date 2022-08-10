@@ -2,7 +2,7 @@ $firstINT = "Intel(R) RealSense(TM) Depth Camera 415  Depth";
 $secondINT = "Intel(R) RealSense(TM) Depth Camera 415  RGB";
 $List = Get-PnpDevice -PresentOnly | Where-Object{$_.CompatibleID -match "^USB" -and $_.Status -eq "OK" -and ($_.Name -eq $firstINT -or $_.Name -eq $secondINT)} 
 
-$flag = $false;
+$flag = $true;
 foreach($item in $list)
 {
     $data = @{"DEVPKEY_Device_IsRebootRequired" = $null;
@@ -18,7 +18,7 @@ foreach($item in $list)
         }
        
 
-        if ( $data["DEVPKEY_Device_HasProblem"] -eq $false)
+        if ( $data["DEVPKEY_Device_HasProblem"] -eq $true)
         { 
             $flag = $false;
         }

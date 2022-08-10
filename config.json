@@ -1,1 +1,1 @@
-{"name_app": "Slides.exe", "camera_ProdVendorId": "", "ip_tv": "", "client_key": "", "mac_address_tv": "", "camera": "", "tv": "", "broadcast": "192.168.50.255", "server_zabbix": ["84.39.252.107", 10051], "host": ""}
+{"name_app": "Slides.exe", "camera_ProdVendorId": "", "ip_tv": "192.168.50.214", "client_key": "7546afb2f1659e0eda0374db50473157", "mac_address_tv": "B0-37-95-DD-0F-6F", "camera": "", "tv": "something", "broadcast": "192.168.50.255", "server_zabbix": ["84.39.252.107", 10051], "host": "PC-MAIN"}

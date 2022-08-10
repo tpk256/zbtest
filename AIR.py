@@ -1,4 +1,5 @@
 from getmac import get_mac_address
+from threading import Thread
 from pywebostv.connection import WebOSClient
 from pywebostv.controls import SystemControl
 from wakeonlan import send_magic_packet
@@ -10,6 +11,7 @@ import time
 import asyncio
 import subprocess
 import sys
+import socket
 
 
 class Exc(Exception):
@@ -102,10 +104,9 @@ class Checker(SetUp):  # Inherit because same constructor
            "shell": True,
            "timeout": 5}
     TRAPPER_NAMES = ["PINGTV", "STATECAMERA", "STATETV", "STATEAPP"]
-    CHECK_APP = r'powershell .\isrun_app.ps1 {}'
     CHECK_ITEM = r"powershell .\check_item.ps1 {}"
     CHECK_CAMERA = r"powershell .\check_camera.ps1"
-
+    data_from_app: dict = None
     REQUEST_SEND = r'zabbix_sender -z {zabbix} -p {port} -s "{host}" -k {key} -o {value}'
 
     def __init__(self):
@@ -133,19 +134,22 @@ class Checker(SetUp):  # Inherit because same constructor
             Bool value that mean connect Camera to PC. +
             Check device(camera) with status 'OK' in device manager.
         """
-        #  TODO change way get status camera
 
         camera = subprocess.run(Checker.CHECK_CAMERA, **Checker.A_D)
+        print(camera.stdout.strip().decode())
         return camera.stdout.strip().decode() == str(True)
 
     @property
     def AppIsOn(self) -> bool:
         """
             Bool value that mean state APP
-            APP in process or NOT.
+            get state app with help socket tcp connection from app to script.
         """
-        app = subprocess.run(Checker.CHECK_APP.format(self.config['name_app']), **Checker.A_D)
-        return app.stdout.strip().decode() == str(True)
+        app_status = Checker.data_from_app
+        Checker.data_from_app = None
+        if app_status is None:
+            return False
+        return app_status['state_app'] == str(True)
 
     def set_up_logger(self):
         """
@@ -191,9 +195,11 @@ class Checker(SetUp):  # Inherit because same constructor
             Collect data and send data to zabbix server.
         """
         self.info.info(msg="Start script!")
+        socket_check = Socket()
+        socket_check.start()
         while True:
             self.info.info("Start collect data")
-            answer = {name: False for name in Checker.CHECK_APP}
+            answer = {name: False for name in Checker.TRAPPER_NAMES}
             answer['PINGTV'] = await self.ping_tv()
             answer['STATECAMERA'] = self.CameraIsConnected
             answer['STATETV'] = self.TvIsConnected
@@ -202,6 +208,19 @@ class Checker(SetUp):  # Inherit because same constructor
             self.info.info("Finish collect data")
             await self.send_metrics(answer)
             await asyncio.sleep(90)
+
+
+class Socket(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.daemon = True
+
+    def run(self):
+        sock = socket.create_server(('', 49001), family=socket.AF_INET, backlog=3)
+
+        while True:
+            out_socket, ip = sock.accept()
+            Checker.data_from_app = json.loads(str(out_socket.recv(1024), "UTF-8"))
 
 
 class RemoteTv(SetUp):
@@ -217,6 +236,7 @@ class RemoteTv(SetUp):
         self.WebOs = WebOSClient(self.config['ip_tv'])
         self.WebOs.connect()
         _ = [_ for _ in self.WebOs.register(self.config)]  # It doesn't matter for us because this simple process auth
+        print("+ LOGIN")
 
     def turn_off(self):
         """
@@ -229,11 +249,11 @@ class RemoteTv(SetUp):
         """
             Turn on tv with help magic packet WakeOnLan
         """
+        for i in range(5):
+            send_magic_packet(self.config['mac_address_tv'],  # First param - MAC TV; Second param - IP_TV/Broadcast
+                              ip_address=self.config['broadcast'])
 
-        send_magic_packet(self.config['mac_address_tv'],  # First param - MAC TV; Second param - IP_TV/Broadcast
-                          ip_address=self.config['broadcast'])
 
-        
 def start_and_auth_tv() -> RemoteTv:
     """
         Return object RemoteTv that you can use for remote access.
@@ -251,7 +271,6 @@ parser.add_argument("mode", choices=choices)
 # parser.add_argument("--option")  # option for future
 
 
-
 if __name__ == "__main__":
     namespace = parser.parse_args()
     if namespace.mode == "SetUp":
@@ -260,6 +279,7 @@ if __name__ == "__main__":
         ob.get_mac_tv()
         ob.get_client_key()
     elif namespace.mode == "Checker":
+        print("Start TV and Auth on TV")
         start_and_auth_tv()
         checker = Checker()
         asyncio.run(checker.main())
