@@ -25,5 +25,6 @@ foreach($item in $list)
         
 }
 
-
+if ($List.length -eq 0)
+{$flag = $false;}
 write-host $flag;
