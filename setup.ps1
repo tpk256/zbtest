@@ -1,15 +1,13 @@
 ﻿#Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
-[string] $path_setup = (Get-Location).Path + "\module.psm1";
 #Import-Module -Name $path_setup  -Verbose;
 
 if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверка на текущую директорию
 {
 
-    $flag = $false;
-    ls $env:ProgramFiles | Where-Object{ if ($_.basename.contains("Python")){$flag = $true;}};
+    
     
     Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser -Force;
-    if (-not $flag){
+   
 
 
         
@@ -62,7 +60,7 @@ if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверк
 
     #  Create a new virtual disk or use exist---
     Set-Location -Path C:\Users;
-
+    pause;
 
     #  Create a main folder
    
@@ -96,7 +94,7 @@ if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверк
     Write-Host "Введите имя хоста(текущий пк):";
     [string] $host_name = Read-Host;
 
-    Write-Host "Введите порт для прослушивания:";
+    Write-Host "Введите порт zabbix сервера:";
     [int] $listen_port = Read-Host;
 
 
@@ -108,9 +106,9 @@ if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверк
     $path_zabbix = Join-Path (Get-Location).Path -ChildPath zabbixAgent
     Write-Host "Start install zabbix agent";
 
+    #1 Поправка на активную проверку
 
-
-    $argss = "/l*v log.txt /i C:\Users\Airlabs\zabbix_agent.msi /qb HOSTNAME=$host_name LISTENPORT=$listen_port ENABLEPATH=1 INSTALLFOLDER=$path_zabbix SERVER=$server RMTCMD=1  SKIP=fw ENABLEREMOTECOMMANDS=1";
+    $argss = "/l*v log.txt /i C:\Users\Airlabs\zabbix_agent.msi /qb HOSTNAME=$host_name LISTENPORT=$listen_port SERVERACTIVE=$($server+':'+$listen_port) ENABLEPATH=1 INSTALLFOLDER=$path_zabbix SERVER=$server RMTCMD=1  SKIP=fw ENABLEREMOTECOMMANDS=1";
     $ans = Start-Process msiexec -ArgumentList $argss -PassThru -Wait;
 
     Write-Host "Finish install zabbix agent";
@@ -124,20 +122,20 @@ if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверк
     Set-Content -Value $json -Path "config.json";
 
     write-host "Restart script for continue setup";
-    }
+    
 
 #########
 
       #new-item -ItemType Directory -Path . -Name "script";
       #$python_path = $env:Path.split(";") | Where-Object{$_.Contains("Python")} | ForEach-Object{if ($_.split("\")[-2].contains("Python")) {$_}}
       #$python_path += "python.exe";
-     else{
+    
+        $env:PATH = Get-ItemPropertyValue -Path "hklm:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" -Name "path";
 
-
-     cd C:\Users\Airlabs;
-      Write-Host "Start install venv";
+      cd C:\Users\Airlabs;
+      Write-Host "Start create a venv";
       start-process "python.exe" -ArgumentList "-m venv script" -Wait;
-      Write-Host "End install venv";
+      Write-Host "Finish install venv";
 
 
 
@@ -172,7 +170,7 @@ if ((Get-Location).Path.split("\")[-1].ToLower() -eq "setup" )  # Проверк
  
      }
 
-}
+
 
 else{
     Write-Host "Запускать только в setup";
